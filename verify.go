@@ -3,6 +3,7 @@ package main
 import (
 	"path/filepath"
 
+	"github.com/dustin/go-humanize"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -35,6 +36,6 @@ func runVerify(cmd *cobra.Command, args []string) {
 			l.Fatalf("parse certificate: %s", err)
 		}
 
-		l.Infof("certificate will expire in %s", cert.ExpiresIn())
+		l.Infof("certificate will expire in %s", humanize.Time(cert.ExpireTime()))
 	}
 }

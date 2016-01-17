@@ -43,3 +43,7 @@ func (p *PemCert) IsExpiredAt(expire time.Time) bool {
 func (p *PemCert) ExpiresIn() time.Duration {
 	return p.cert.NotAfter.Sub(time.Now())
 }
+
+func (p *PemCert) ExpireTime() time.Time {
+	return p.cert.NotAfter
+}
