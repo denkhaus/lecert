@@ -31,7 +31,9 @@ func runGen(cmd *cobra.Command, args []string) {
 
 	for _, domain := range args {
 		certFile := filepath.Join(c.outputDir, domain+".crt.pem")
+		csrFile := filepath.Join(c.outputDir, domain+".csr.pem")
 		keyFile := filepath.Join(c.outputDir, domain+".key.pem")
+
 		if fileExists(certFile) || fileExists(keyFile) {
 			log.Warnln("skip: cert and/or key exists for " + domain)
 			continue
@@ -48,7 +50,13 @@ func runGen(cmd *cobra.Command, args []string) {
 			l.Fatalln(err)
 		}
 
-		data := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
+		data := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csr.Raw})
+		err = ioutil.WriteFile(csrFile, data, 0600)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		data = pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
 		err = ioutil.WriteFile(keyFile, data, 0600)
 		if err != nil {
 			log.Fatalln(err)

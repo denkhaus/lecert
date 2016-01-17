@@ -68,6 +68,7 @@ func newCSR(domain string, bits int) (*x509.CertificateRequest, *rsa.PrivateKey,
 		Subject:            pkix.Name{CommonName: domain},
 		DNSNames:           []string{domain},
 	}
+
 	log.WithField("domain", domain).Debugln("Generating CSR")
 	csrDER, err := x509.CreateCertificateRequest(rand.Reader, template, certKey)
 	if err != nil {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"path/filepath"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -22,11 +21,10 @@ func runVerify(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
-	dtExpire := time.Now().Add(time.Hour * 24 * 7 * 2)
-
 	for _, domain := range args {
 		l := log.WithField("domain", domain)
 		certFile := filepath.Join(c.outputDir, domain+".crt.pem")
+
 		if !fileExists(certFile) {
 			l.Warnln("skip: cert not exists for " + domain)
 			continue
@@ -38,8 +36,5 @@ func runVerify(cmd *cobra.Command, args []string) {
 		}
 
 		l.Infof("certificate will expire in %s", cert.ExpiresIn())
-		if cert.IsExpiredAt(dtExpire) {
-			l.Infof("certificate will be expired at %s", domain, dtExpire)
-		}
 	}
 }
