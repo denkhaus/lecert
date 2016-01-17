@@ -1,34 +1,68 @@
 package main
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"crypto/x509"
-	"crypto/x509/pkix"
+	"encoding/pem"
+	"io/ioutil"
+	"path/filepath"
+
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
-func newCSR(domain string, bits int) (*x509.CertificateRequest, *rsa.PrivateKey, error) {
-	log.WithField("domain", domain).Infof("Generating %d-bit RSA key", bits)
-	certKey, err := rsa.GenerateKey(rand.Reader, bits)
+var (
+	genCmd = &cobra.Command{
+		Use:   "generate <domains...>",
+		Short: "Generate and sign new certificate(s).",
+		Run:   runGen,
+	}
+)
+
+func runGen(cmd *cobra.Command, args []string) {
+	c, err := getConfig(cmd)
 	if err != nil {
-		return nil, nil, err
+		log.Fatalln(err)
 	}
-	template := &x509.CertificateRequest{
-		SignatureAlgorithm: x509.SHA256WithRSA,
-		PublicKeyAlgorithm: x509.RSA,
-		PublicKey:          &certKey.PublicKey,
-		Subject:            pkix.Name{CommonName: domain},
-		DNSNames:           []string{domain},
-	}
-	log.WithField("domain", domain).Debugln("Generating CSR")
-	csrDER, err := x509.CreateCertificateRequest(rand.Reader, template, certKey)
+
+	cli, err := c.getClient()
 	if err != nil {
-		return nil, nil, err
+		log.Fatalln(err)
 	}
-	csr, err := x509.ParseCertificateRequest(csrDER)
-	if err != nil {
-		return nil, nil, err
+
+	for _, domain := range args {
+		certFile := filepath.Join(c.outputDir, domain+".crt.pem")
+		keyFile := filepath.Join(c.outputDir, domain+".key.pem")
+		if fileExists(certFile) || fileExists(keyFile) {
+			log.Warnln("skip: cert and/or key exists for " + domain)
+			continue
+		}
+
+		l := log.WithField("domain", domain)
+		csr, key, err := newCSR(domain, c.bits)
+		if err != nil {
+			l.Fatalln("certificate generation failed:", err)
+		}
+
+		cert, err := cli.fulfilCSR(csr)
+		if err != nil {
+			l.Fatalln(err)
+		}
+
+		data := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
+		err = ioutil.WriteFile(keyFile, data, 0600)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		data = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
+		if c.chain {
+			data = append(data, c.chainData...)
+		}
+		err = ioutil.WriteFile(certFile, data, 0600)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		log.Infoln("Generated certificate for:", domain)
 	}
-	return csr, certKey, nil
 }
