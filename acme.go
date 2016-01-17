@@ -6,10 +6,11 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/ericchiang/letsencrypt"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
+
+	"github.com/ericchiang/letsencrypt"
+	log "github.com/sirupsen/logrus"
 )
 
 func getAccountKey(cli *letsencrypt.Client, keyFile string, bits int) (*rsa.PrivateKey, error) {
@@ -95,5 +96,12 @@ func (cli *Client) fulfilCSR(csr *x509.CertificateRequest) (*x509.Certificate, e
 	if err != nil {
 		return nil, err
 	}
-	return cli.NewCertificate(cli.accountKey, csr)
+
+	res, err := cli.NewCertificate(cli.accountKey, csr)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Certificate, nil
+
 }

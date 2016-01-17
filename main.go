@@ -4,14 +4,16 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"github.com/ericchiang/letsencrypt"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
+
+	"github.com/ericchiang/letsencrypt"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 const acmeURL = "https://acme-v01.api.letsencrypt.org/directory"
@@ -63,6 +65,12 @@ var (
 		Use:   "generate <domains...>",
 		Short: "Generate and sign new certificate(s).",
 		Run:   runGen,
+	}
+
+	verifyCmd = &cobra.Command{
+		Use:   "verify <domains...>",
+		Short: "Verify existing certificates.",
+		Run:   runVerify,
 	}
 
 	signCmd = &cobra.Command{
@@ -168,6 +176,7 @@ func (c *Config) getClient() (*Client, error) {
 
 	return &Client{Client: lcli, accountKey: accountKey, HTTPChallengeResponder: h}, nil
 }
+
 func fileExists(file string) bool {
 	_, err := os.Stat(file)
 	// no error, or error is not a "NotExist" error
@@ -223,6 +232,35 @@ func runGen(cmd *cobra.Command, args []string) {
 		log.Infoln("Generated certificate for:", domain)
 	}
 }
+
+func runVerify(cmd *cobra.Command, args []string) {
+	c, err := getConfig(cmd)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	dtExpire := time.Now().Add(time.Hour * 24 * 7 * 2)
+
+	for _, domain := range args {
+		l := log.WithField("domain", domain)
+		certFile := filepath.Join(c.outputDir, domain+".crt.pem")
+		if fileExists(certFile) {
+			l.Warnln("skip: cert not exists for " + domain)
+			continue
+		}
+
+		cert := NewPemCert(certFile)
+		if err := cert.Parse(); err != nil {
+			l.Fatalf("parse certificate: %s", err)
+		}
+
+		l.Infof("certificate will expire in %s", cert.ExpiresIn())
+		if cert.IsExpiredAt(dtExpire) {
+			l.Infof("certificate will be expired at %s", domain, dtExpire)
+		}
+	}
+}
+
 func runSign(cmd *cobra.Command, args []string) {
 	c, err := getConfig(cmd)
 	if err != nil {
@@ -275,6 +313,6 @@ func runSign(cmd *cobra.Command, args []string) {
 }
 
 func main() {
-	mainCmd.AddCommand(genCmd, signCmd)
+	mainCmd.AddCommand(genCmd, signCmd, verifyCmd)
 	mainCmd.Execute()
 }
