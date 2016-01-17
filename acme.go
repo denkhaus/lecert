@@ -11,10 +11,12 @@ import (
 func (cli *Client) validateDomainOwnership(domain string) error {
 	l := log.WithField("domain", domain)
 	l.Debug("asking for challenges")
+
 	auth, _, err := cli.NewAuthorization(cli.accountKey, "dns", domain)
 	if err != nil {
 		return err
 	}
+
 	chals := auth.Combinations(supportedChallengs...)
 	if len(chals) == 0 {
 		return fmt.Errorf("no supported challenge combinations")

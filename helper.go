@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/ericchiang/letsencrypt"
 	log "github.com/sirupsen/logrus"
@@ -21,6 +22,11 @@ func fileExists(file string) bool {
 	// no error, or error is not a "NotExist" error
 	// then file exists
 	return err == nil || !os.IsNotExist(err)
+}
+
+func makeTimeStampFile(filePath string) error {
+	newName := fmt.Sprintf("%s.%s", time.Now().Format("20060102-150405"))
+	return os.Rename(filePath, newName)
 }
 
 func getChain() []byte {
@@ -56,11 +62,14 @@ func getChain() []byte {
 }
 
 func newCSR(domain string, bits int) (*x509.CertificateRequest, *rsa.PrivateKey, error) {
-	log.WithField("domain", domain).Infof("Generating %d-bit RSA key", bits)
+	l := log.WithField("domain", domain)
+
+	l.Infof("Generating %d-bit RSA key", bits)
 	certKey, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
 		return nil, nil, err
 	}
+
 	template := &x509.CertificateRequest{
 		SignatureAlgorithm: x509.SHA256WithRSA,
 		PublicKeyAlgorithm: x509.RSA,
@@ -69,11 +78,12 @@ func newCSR(domain string, bits int) (*x509.CertificateRequest, *rsa.PrivateKey,
 		DNSNames:           []string{domain},
 	}
 
-	log.WithField("domain", domain).Debugln("Generating CSR")
+	l.Debugln("Generating CSR")
 	csrDER, err := x509.CreateCertificateRequest(rand.Reader, template, certKey)
 	if err != nil {
 		return nil, nil, err
 	}
+
 	csr, err := x509.ParseCertificateRequest(csrDER)
 	if err != nil {
 		return nil, nil, err
