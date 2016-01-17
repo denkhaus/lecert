@@ -25,7 +25,8 @@ func fileExists(file string) bool {
 }
 
 func makeTimeStampFile(filePath string) error {
-	newName := fmt.Sprintf("%s.%s", time.Now().Format("20060102-150405"))
+	newName := fmt.Sprintf("%s.%s", filePath,
+		time.Now().Format("20060102-150405"))
 	return os.Rename(filePath, newName)
 }
 
