@@ -56,6 +56,6 @@ func init() {
 }
 
 func main() {
-	mainCmd.AddCommand(genCmd, signCmd, verifyCmd)
+	mainCmd.AddCommand(genCmd, signCmd, verifyCmd, renewCmd)
 	mainCmd.Execute()
 }
