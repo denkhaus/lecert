@@ -1,14 +1,21 @@
 package config
 
-import "github.com/spf13/cobra"
+import (
+	"errors"
+
+	"github.com/spf13/cobra"
+)
 
 type Config struct {
-	BindAddress string
-	AcmeURL     string
-	OutputDir   string
-	KeyFile     string
-	Bits        int
-	Chain       bool
+	BindAddress    string
+	AcmeURL        string
+	OutputDir      string
+	KeyFile        string
+	RootPath       string
+	Bits           int
+	Chain          bool
+	ModeWebRoot    bool
+	ModeStandalone bool
 }
 
 func NewFromCli(cmd *cobra.Command) (*Config, error) {
@@ -37,6 +44,24 @@ func NewFromCli(cmd *cobra.Command) (*Config, error) {
 	c.Chain, err = cmd.Flags().GetBool("chain")
 	if err != nil {
 		return nil, err
+	}
+	c.ModeWebRoot, err = cmd.Flags().GetBool("webroot")
+	if err != nil {
+		return nil, err
+	}
+	c.ModeStandalone, err = cmd.Flags().GetBool("standalone")
+	if err != nil {
+		return nil, err
+	}
+	c.RootPath, err = cmd.Flags().GetString("root-path")
+	if err != nil {
+		return nil, err
+	}
+	if c.ModeWebRoot && c.ModeStandalone {
+		return nil, errors.New("mode: specify either 'webroot' OR 'standalone'")
+	}
+	if c.ModeWebRoot && c.RootPath == "" {
+		return nil, errors.New("root-path is undefined")
 	}
 
 	return &c, nil

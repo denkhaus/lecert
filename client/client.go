@@ -35,7 +35,7 @@ var chainURLs = []string{
 }
 
 type ChallengeResponder interface {
-	SetResource(path, resource string)
+	SetResource(path, resource string) error
 }
 
 type Client struct {
@@ -128,10 +128,25 @@ func New(cnf *config.Config) (*Client, error) {
 		return nil, errors.Annotate(err, "get account key")
 	}
 
-	h, err := NewHTTPChallengeResponder(cnf.BindAddress)
-	if err != nil {
-		return nil, errors.Annotate(err, "new challenge responder")
+	var resp ChallengeResponder
+	if cnf.ModeStandalone {
+		h, err := NewHTTPChallengeResponder(cnf.BindAddress)
+		if err != nil {
+			return nil, errors.Annotate(err, "new http challenge responder")
+		}
+		resp = h
+	}
+	if cnf.ModeWebRoot {
+		h, err := NewWebRootChallengeResponder(cnf.RootPath)
+		if err != nil {
+			return nil, errors.Annotate(err, "new webroot challenge responder")
+		}
+		resp = h
 	}
 
-	return &Client{Client: lcli, accountKey: accountKey, ChallengeResponder: h}, nil
+	if resp == nil {
+		return nil, errors.New("challenge responder undefined")
+	}
+
+	return &Client{Client: lcli, accountKey: accountKey, ChallengeResponder: resp}, nil
 }

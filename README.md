@@ -63,9 +63,11 @@ Flags:
       --chain                Include full chain. If set, download and include all LE certificates in the chain.
   -h, --help                 help for lecert
   -d, --output-dir string    Output directory. Certificates and keys will be stored here. (default ".")
+  -r, --root-path string     Path used by webroot mode.
+      --standalone           Standalone mode provides a buildin webserver for challenge handling listening on specified bindaddress. (default true)
   -v, --verbose              Verbose mode. Logs extra messages for debugging.
+      --webroot              Webroot mode uses the provided root-path for challenge handling.
 
 Use "lecert [command] --help" for more information about a command.
-
 
 ```

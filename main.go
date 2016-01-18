@@ -50,6 +50,9 @@ var (
 
 func init() {
 	cobra.EnablePrefixMatching = true
+	mainCmd.PersistentFlags().Bool("standalone", true, "Standalone mode provides a buildin webserver for challenge handling listening on specified bindaddress.")
+	mainCmd.PersistentFlags().Bool("webroot", false, "Webroot mode uses the provided root-path for challenge handling.")
+	mainCmd.PersistentFlags().StringP("root-path", "r", "", "Path used by webroot mode.")
 	mainCmd.PersistentFlags().StringP("bind", "b", ":80", "Bind address. The binding address:port for the server. Note, port 80 on the domain(s) must be mapped to this address.")
 	mainCmd.PersistentFlags().StringP("acme-url", "u", client.AcmeURL, "ACME URL. URL to the ACME directory to use.")
 	mainCmd.PersistentFlags().StringP("output-dir", "d", ".", "Output directory. Certificates and keys will be stored here.")

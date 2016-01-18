@@ -34,22 +34,28 @@ func NewHTTPChallengeResponder(address string) (*HTTPChallengeResponder, error) 
 func (h *HTTPChallengeResponder) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.RLock()
 	defer h.RUnlock()
+	l := log.WithFields(log.Fields{"mode": "standalone", "host": r.Host, "path": r.URL.Path})
 
 	if r.URL.Path != h.path {
-		log.WithFields(log.Fields{"host": r.Host, "path": r.URL.Path}).Warnln("Bad Request")
+		l.Warnln("Bad Request")
 		http.NotFound(w, r)
 		return
 	}
 
-	log.WithFields(log.Fields{"host": r.Host, "path": r.URL.Path}).Debugln("Success")
+	l.Debugln("Success")
 	io.WriteString(w, h.resource)
 }
 
-func (h *HTTPChallengeResponder) SetResource(path, resource string) {
+func (h *HTTPChallengeResponder) SetResource(path, resource string) error {
 	h.Lock()
 	defer h.Unlock()
+	log.WithFields(log.Fields{
+		"mode":     "standalone",
+		"path":     path,
+		"resource": resource,
+	}).Debugln("SetResource")
 
-	log.WithFields(log.Fields{"path": path, "resource": resource}).Debugln("SetResource")
 	h.path = path
 	h.resource = resource
+	return nil
 }

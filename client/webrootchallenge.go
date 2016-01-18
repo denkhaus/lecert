@@ -5,11 +5,7 @@ import (
 	"path"
 
 	"github.com/juju/errors"
-	"github.com/sirupsen/logrus"
-)
-
-var (
-	logger = logrus.WithField("mode", "webroot")
+	log "github.com/sirupsen/logrus"
 )
 
 type WebRootChallengeResponder struct {
@@ -21,12 +17,16 @@ func NewWebRootChallengeResponder(rootPath string) (*WebRootChallengeResponder, 
 	return &cr, nil
 }
 
-func (h *WebRootChallengeResponder) SetResource(p, resource string) {
-	l := logger.WithFields(logrus.Fields{"path": p, "resource": resource})
-	l.Debugln("SetResource")
+func (h *WebRootChallengeResponder) SetResource(p, resource string) error {
+	log.WithFields(log.Fields{
+		"mode":     "webroot",
+		"path":     p,
+		"resource": resource,
+	}).Debugln("SetResource")
 
 	resPath := path.Join(h.rootPath, p)
 	if err := ioutil.WriteFile(resPath, []byte(resource), 0755); err != nil {
-		l.Error(errors.Annotate(err, "write ressource"))
+		return errors.Annotate(err, "write ressource")
 	}
+	return nil
 }
