@@ -153,7 +153,7 @@ func (p *Api) GenerateCertificate(domain string) error {
 }
 
 func (p *Api) SignCSR(csrFile string) error {
-
+	l := log.WithField("csr", csrFile)
 	if !fileExists(csrFile) {
 		return errors.Errorf("csr file %q does not exist", csrFile)
 	}
@@ -175,7 +175,7 @@ func (p *Api) SignCSR(csrFile string) error {
 		return errors.Annotate(err, "parse csr")
 	}
 
-	l := log.WithField("domain", csr.Subject.CommonName)
+	l = l.WithField("domain", csr.Subject.CommonName)
 	certFile := filepath.Join(p.cnf.OutputDir, csr.Subject.CommonName+".crt.pem")
 	if fileExists(certFile) {
 		return errors.Errorf("cert already exists for %q", csr.Subject.CommonName)
