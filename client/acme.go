@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"crypto/x509"
@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (cli *Client) validateDomainOwnership(domain string) error {
+func (cli *Client) ValidateDomainOwnership(domain string) error {
 	l := log.WithField("domain", domain)
 	l.Debug("asking for challenges")
 
@@ -42,14 +42,14 @@ func (cli *Client) validateDomainOwnership(domain string) error {
 	return nil
 }
 
-func (cli *Client) fulfilCSR(csr *x509.CertificateRequest) (*x509.Certificate, error) {
+func (cli *Client) FulfillCSR(csr *x509.CertificateRequest) (*x509.Certificate, error) {
 	for _, domain := range csr.DNSNames {
-		err := cli.validateDomainOwnership(domain)
+		err := cli.ValidateDomainOwnership(domain)
 		if err != nil {
 			return nil, err
 		}
 	}
-	err := cli.validateDomainOwnership(csr.Subject.CommonName)
+	err := cli.ValidateDomainOwnership(csr.Subject.CommonName)
 	if err != nil {
 		return nil, err
 	}
