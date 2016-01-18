@@ -53,6 +53,7 @@ Available Commands:
   sign        Fulfill existing CSR(s).
   verify      Verify existing certificate(s).
   renew       Renew existing certificate(s).
+  ensure      Create non existing certificate(s) or renew if necessary.
 
 Flags:
   -k, --account-key string   ACME account key (PEM format). The account key to use with this CA. If it doesn't exist, one will be generated. (default "acme.key")
@@ -65,5 +66,6 @@ Flags:
   -v, --verbose              Verbose mode. Logs extra messages for debugging.
 
 Use "lecert [command] --help" for more information about a command.
+
 
 ```
