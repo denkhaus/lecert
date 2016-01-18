@@ -34,9 +34,13 @@ var chainURLs = []string{
 	"https://letsencrypt.org/certs/isrgrootx1.pem",
 }
 
+type ChallengeResponder interface {
+	SetResource(path, resource string)
+}
+
 type Client struct {
 	*letsencrypt.Client
-	*HTTPChallengeResponder
+	ChallengeResponder
 	accountKey *rsa.PrivateKey
 }
 
@@ -129,5 +133,5 @@ func New(cnf *config.Config) (*Client, error) {
 		return nil, errors.Annotate(err, "new challenge responder")
 	}
 
-	return &Client{Client: lcli, accountKey: accountKey, HTTPChallengeResponder: h}, nil
+	return &Client{Client: lcli, accountKey: accountKey, ChallengeResponder: h}, nil
 }
