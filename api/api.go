@@ -41,8 +41,6 @@ func (p *Api) EnsureCertificate(domain string) error {
 		l.Infof("certificate is unavailable - generate")
 		return p.GenerateCertificate(domain)
 	}
-
-	return nil
 }
 
 func (p *Api) VerifyCertificate(domain string) (bool, error) {
