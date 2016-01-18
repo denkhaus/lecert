@@ -41,6 +41,11 @@ var (
 		Short: "Renew existing certificate(s).",
 		Run:   runRenew,
 	}
+	ensureCmd = &cobra.Command{
+		Use:   "ensure <domains...>",
+		Short: "Create non existing certificate(s) or renew if neccesary.",
+		Run:   runEnsure,
+	}
 )
 
 func init() {
@@ -80,6 +85,17 @@ func runRenew(cmd *cobra.Command, args []string) {
 	}
 }
 
+func runEnsure(cmd *cobra.Command, args []string) {
+	api := createApi(cmd)
+	log.Debug("process ensure")
+	for _, domain := range args {
+		l := log.WithField("domain", domain)
+		if err := api.EnsureCertificate(domain); err != nil {
+			l.Error(errors.Annotate(err, "ensure certificate"))
+		}
+	}
+}
+
 func runGen(cmd *cobra.Command, args []string) {
 	api := createApi(cmd)
 	log.Debug("process generate")
@@ -96,7 +112,7 @@ func runVerify(cmd *cobra.Command, args []string) {
 	log.Debug("process verify")
 	for _, domain := range args {
 		l := log.WithField("domain", domain)
-		if err := api.VerifyCertificate(domain); err != nil {
+		if _, err := api.VerifyCertificate(domain); err != nil {
 			l.Error(errors.Annotate(err, "renew certificate"))
 		}
 	}
@@ -114,6 +130,6 @@ func runSign(cmd *cobra.Command, args []string) {
 }
 
 func main() {
-	mainCmd.AddCommand(genCmd, signCmd, verifyCmd, renewCmd)
+	mainCmd.AddCommand(genCmd, signCmd, verifyCmd, renewCmd, ensureCmd)
 	mainCmd.Execute()
 }

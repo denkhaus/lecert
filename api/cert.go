@@ -5,6 +5,8 @@ import (
 	"encoding/pem"
 	"io/ioutil"
 	"time"
+
+	"github.com/juju/errors"
 )
 
 type PemCert struct {
@@ -22,14 +24,14 @@ func NewPemCert(certFile string) *PemCert {
 func (p *PemCert) Parse() error {
 	buf, err := ioutil.ReadFile(p.filePath)
 	if err != nil {
-		return err
+		return errors.Annotate(err, "read certificate")
 	}
 	p.buf = buf
 
 	block, _ := pem.Decode(p.buf)
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return err
+		return errors.Annotate(err, "parse certificate")
 	}
 	p.cert = cert
 

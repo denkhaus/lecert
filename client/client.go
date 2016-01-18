@@ -10,12 +10,15 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/denkhaus/lecert/config"
 	"github.com/ericchiang/letsencrypt"
 	"github.com/juju/errors"
 	log "github.com/sirupsen/logrus"
 )
+
+var AllowRenewTs = time.Duration(24 * time.Hour * 14)
 
 var supportedChallengs = []string{
 	letsencrypt.ChallengeHTTP,
@@ -112,7 +115,7 @@ func (p *Client) Chain() []byte {
 func New(cnf *config.Config) (*Client, error) {
 	lcli, err := letsencrypt.NewClient(cnf.AcmeURL)
 	if err != nil {
-		return nil, err
+		return nil, errors.Annotate(err, "new le client")
 	}
 
 	os.MkdirAll(cnf.OutputDir, 0700)

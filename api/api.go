@@ -6,6 +6,7 @@ import (
 
 	"io/ioutil"
 	"path/filepath"
+	"time"
 
 	"github.com/denkhaus/lecert/client"
 	"github.com/denkhaus/lecert/config"
@@ -20,21 +21,52 @@ type Api struct {
 	cli *client.Client
 }
 
-func (p *Api) VerifyCertificate(domain string) error {
+func (p *Api) EnsureCertificate(domain string) error {
+	l := log.WithField("domain", domain)
+
+	ok, err := p.VerifyCertificate(domain)
+	if err != nil {
+		l.Error(errors.Annotate(err, "verify certificate"))
+	}
+
+	if ok {
+		l.Infof("certificate is available and valid")
+		return nil
+	}
+
+	if p.certFileExists(domain) {
+		l.Infof("certificate is available but expired or invalid - renew")
+		return p.RenewCertificate(domain)
+	} else {
+		l.Infof("certificate is unavailable - generate")
+		return p.GenerateCertificate(domain)
+	}
+
+	return nil
+}
+
+func (p *Api) VerifyCertificate(domain string) (bool, error) {
 	l := log.WithField("domain", domain)
 	certFile := filepath.Join(p.cnf.OutputDir, domain+".crt.pem")
 
 	if !fileExists(certFile) {
-		return errors.New("certificate does not exist")
+		return true, errors.New("certificate does not exist")
 	}
 
 	cert := NewPemCert(certFile)
 	if err := cert.Parse(); err != nil {
-		return errors.Annotate(err, "parse certificate")
+		return true, errors.Annotate(err, "parse certificate")
 	}
 
 	l.Infof("certificate will expire in %s", humanize.Time(cert.ExpireTime()))
-	return nil
+	if time.Now().Add(client.AllowRenewTs).After(cert.ExpireTime()) {
+		l.Infof("renew if possible")
+		return true, nil
+	} else {
+		l.Infof("renew is not recommended")
+	}
+
+	return false, nil
 }
 
 func (p *Api) RenewCertificate(domain string) error {

@@ -7,10 +7,16 @@ import (
 	"crypto/x509/pkix"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 )
+
+func (p *Api) certFileExists(domain string) bool {
+	certFile := filepath.Join(p.cnf.OutputDir, domain+".crt.pem")
+	return fileExists(certFile)
+}
 
 func fileExists(file string) bool {
 	_, err := os.Stat(file)
