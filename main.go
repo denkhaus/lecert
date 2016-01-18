@@ -55,6 +55,7 @@ func init() {
 }
 
 func createApi(cmd *cobra.Command) *api.Api {
+	log.Debug("create api")
 	c, err := config.NewFromCli(cmd)
 	if err != nil {
 		log.Fatalln(errors.Annotate(err, "new config"))
@@ -70,6 +71,7 @@ func createApi(cmd *cobra.Command) *api.Api {
 
 func runRenew(cmd *cobra.Command, args []string) {
 	api := createApi(cmd)
+	log.Debug("process renew")
 	for _, domain := range args {
 		l := log.WithField("domain", domain)
 		if err := api.RenewCertificate(domain); err != nil {
@@ -80,6 +82,7 @@ func runRenew(cmd *cobra.Command, args []string) {
 
 func runGen(cmd *cobra.Command, args []string) {
 	api := createApi(cmd)
+	log.Debug("process generate")
 	for _, domain := range args {
 		l := log.WithField("domain", domain)
 		if err := api.GenerateCertificate(domain); err != nil {
@@ -90,6 +93,7 @@ func runGen(cmd *cobra.Command, args []string) {
 
 func runVerify(cmd *cobra.Command, args []string) {
 	api := createApi(cmd)
+	log.Debug("process verify")
 	for _, domain := range args {
 		l := log.WithField("domain", domain)
 		if err := api.VerifyCertificate(domain); err != nil {
@@ -100,6 +104,7 @@ func runVerify(cmd *cobra.Command, args []string) {
 
 func runSign(cmd *cobra.Command, args []string) {
 	api := createApi(cmd)
+	log.Debug("process sign")
 	for _, domain := range args {
 		l := log.WithField("domain", domain)
 		if err := api.GenerateCertificate(domain); err != nil {

@@ -50,6 +50,7 @@ func (p *Api) RenewCertificate(domain string) error {
 		return errors.New("certificate does not exist")
 	}
 
+	l.Debug("read sign request")
 	data, err := ioutil.ReadFile(csrFile)
 	if err != nil {
 		return errors.Annotate(err, "read csr file")
@@ -65,13 +66,13 @@ func (p *Api) RenewCertificate(domain string) error {
 
 	if err != nil {
 		return errors.Annotatef(err, "parse csr file %q", csrFile)
-
 	}
 
 	if csr.Subject.CommonName != domain {
 		return errors.Errorf("domain mismatch: signing request is for domain %s", csr.Subject.CommonName)
 	}
 
+	l.Debug("fulfill sign request")
 	cert, err := p.cli.FulfillCSR(csr)
 	if err != nil {
 		return errors.Annotate(err, "fulfil csr")
@@ -80,13 +81,16 @@ func (p *Api) RenewCertificate(domain string) error {
 	data = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
 
 	if p.cnf.Chain {
+		l.Debug("request chain data")
 		data = append(data, p.cli.Chain()...)
 	}
 
+	l.Debug("backup current certificate")
 	if err = makeExpiredName(crtFile); err != nil {
 		return errors.Annotate(err, "make crt expired")
 	}
 
+	l.Debug("write new certificate")
 	if err = ioutil.WriteFile(crtFile, data, 0600); err != nil {
 		return errors.Annotate(err, "write certificate")
 	}
@@ -110,18 +114,23 @@ func (p *Api) GenerateCertificate(domain string) error {
 		return errors.Annotate(err, "new csr")
 	}
 
+	l.Debug("fulfill sign request")
 	cert, err := p.cli.FulfillCSR(csr)
 	if err != nil {
 		return errors.Annotate(err, "fulfil csr")
 	}
 
 	data := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csr.Raw})
+
+	l.Debug("write certificate request")
 	err = ioutil.WriteFile(csrFile, data, 0600)
 	if err != nil {
 		return errors.Annotate(err, "write csr file")
 	}
 
 	data = pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
+
+	l.Debug("write rsa key")
 	err = ioutil.WriteFile(keyFile, data, 0600)
 	if err != nil {
 		return errors.Annotate(err, "write key file")
@@ -129,9 +138,11 @@ func (p *Api) GenerateCertificate(domain string) error {
 
 	data = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
 	if p.cnf.Chain {
+		l.Debug("request chain data")
 		data = append(data, p.cli.Chain()...)
 	}
 
+	l.Debug("write certificate")
 	err = ioutil.WriteFile(certFile, data, 0600)
 	if err != nil {
 		return errors.Annotate(err, "write crt file")
@@ -147,6 +158,7 @@ func (p *Api) SignCSR(csrFile string) error {
 		return errors.Errorf("csr file %q does not exist", csrFile)
 	}
 
+	l.Debug("read sign request")
 	data, err := ioutil.ReadFile(csrFile)
 	if err != nil {
 		return errors.Annotate(err, "read csr file")
@@ -169,6 +181,7 @@ func (p *Api) SignCSR(csrFile string) error {
 		return errors.Errorf("cert already exists for %q", csr.Subject.CommonName)
 	}
 
+	l.Debug("fulfill sign request")
 	cert, err := p.cli.FulfillCSR(csr)
 	if err != nil {
 		return errors.Annotate(err, "fulfil csr")
@@ -176,9 +189,11 @@ func (p *Api) SignCSR(csrFile string) error {
 
 	data = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
 	if p.cnf.Chain {
+		l.Debug("request chain data")
 		data = append(data, p.cli.Chain()...)
 	}
 
+	l.Debug("write certificate")
 	err = ioutil.WriteFile(certFile, data, 0600)
 	if err != nil {
 		return errors.Annotate(err, "write crt file")
