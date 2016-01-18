@@ -43,7 +43,7 @@ var (
 	}
 	ensureCmd = &cobra.Command{
 		Use:   "ensure <domains...>",
-		Short: "Create non existing certificate(s) or renew if neccesary.",
+		Short: "Create non existing certificate(s) or renew if necessary.",
 		Run:   runEnsure,
 	}
 )
