@@ -24,12 +24,12 @@ type Api struct {
 func (p *Api) EnsureCertificate(domain string) error {
 	l := log.WithField("domain", domain)
 
-	ok, err := p.VerifyCertificate(domain)
+	exp, err := p.VerifyCertificate(domain)
 	if err != nil {
 		l.Error(errors.Annotate(err, "verify certificate"))
 	}
 
-	if ok {
+	if !exp {
 		l.Infof("certificate is available and valid")
 		return nil
 	}
