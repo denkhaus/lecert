@@ -2,6 +2,7 @@ package client
 
 import (
 	"io/ioutil"
+	"os"
 	"path"
 
 	"github.com/juju/errors"
@@ -23,6 +24,10 @@ func (h *WebRootChallengeResponder) SetResource(p, resource string) error {
 		"path":     p,
 		"resource": resource,
 	}).Debugln("SetResource")
+
+	if err := os.MkdirAll(h.rootPath, 0755); err != nil {
+		return errors.Annotate(err, "ensure root path exists")
+	}
 
 	resPath := path.Join(h.rootPath, p)
 	if err := ioutil.WriteFile(resPath, []byte(resource), 0755); err != nil {
