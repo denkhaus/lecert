@@ -35,10 +35,10 @@ func (p *Api) EnsureCertificate(domain string) error {
 	}
 
 	if p.certFileExists(domain) {
-		l.Infof("certificate is available but expired or invalid - renew")
+		l.Infof("renew certificate")
 		return p.RenewCertificate(domain)
 	} else {
-		l.Infof("certificate is unavailable - generate")
+		l.Infof("generate certificate")
 		return p.GenerateCertificate(domain)
 	}
 }

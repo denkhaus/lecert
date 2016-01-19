@@ -25,11 +25,11 @@ func (h *WebRootChallengeResponder) SetResource(p, resource string) error {
 		"resource": resource,
 	}).Debugln("SetResource")
 
-	if err := os.MkdirAll(h.rootPath, 0755); err != nil {
-		return errors.Annotate(err, "ensure root path exists")
+	resPath := path.Join(h.rootPath, p)
+	if err := os.MkdirAll(path.Dir(resPath), 0755); err != nil {
+		return errors.Annotate(err, "ensure challenge path exists")
 	}
 
-	resPath := path.Join(h.rootPath, p)
 	if err := ioutil.WriteFile(resPath, []byte(resource), 0755); err != nil {
 		return errors.Annotate(err, "write ressource")
 	}
