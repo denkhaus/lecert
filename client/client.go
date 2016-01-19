@@ -130,6 +130,7 @@ func New(cnf *config.Config) (*Client, error) {
 
 	var resp ChallengeResponder
 	if cnf.ModeStandalone {
+		log.Debug("create http challenge responder")
 		h, err := NewHTTPChallengeResponder(cnf.BindAddress)
 		if err != nil {
 			return nil, errors.Annotate(err, "new http challenge responder")
@@ -137,6 +138,7 @@ func New(cnf *config.Config) (*Client, error) {
 		resp = h
 	}
 	if cnf.ModeWebRoot {
+		log.Debug("create webroot challenge responder")
 		h, err := NewWebRootChallengeResponder(cnf.RootPath)
 		if err != nil {
 			return nil, errors.Annotate(err, "new webroot challenge responder")
