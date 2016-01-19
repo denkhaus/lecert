@@ -57,8 +57,13 @@ func NewFromCli(cmd *cobra.Command) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if !c.ModeWebRoot && !c.ModeStandalone {
+		return nil, errors.New("mode: specify runmode either <--webroot, --standalone>")
+	}
+
 	if c.ModeWebRoot && c.ModeStandalone {
-		return nil, errors.New("mode: specify either 'webroot' OR 'standalone'")
+		return nil, errors.New("mode: specify either '--webroot' OR '--standalone'")
 	}
 	if c.ModeWebRoot && c.RootPath == "" {
 		return nil, errors.New("root-path is undefined")
